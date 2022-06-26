@@ -7,7 +7,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +17,7 @@ import com.google.common.collect.ComparisonChain;
 @Service
 @Qualifier
 public class TaggingServiceImp implements TaggingService{
+	private final int MAX_NUMBER_OF_RULES = 3000;
 	
 	@Override
 	public <T extends BaseRoom> Map<Integer, List<Integer>> tagRoom(List<T> rooms, List<Rule> rules) {
@@ -46,22 +46,41 @@ public class TaggingServiceImp implements TaggingService{
 	public TaggingResult handleTaggingSingleRoom(BaseRoom room, List<Rule> rules) {	
 		TaggingResult res = new TaggingResult(room.getId());
 		if (rules.isEmpty()) {
+			res.setRoomId(room.getId());
 			res.setRuleIds(null);
 			return res;
 		}
 		
 		List<Integer> ruleIds = new ArrayList<>();	
-		//List<Rule> tmpRules = new ArrayList<>();
 		
-		String roomName = room.getName();	
+		//Change rules to a modifiable list for sorting
+		List<Rule> tmpRules = new ArrayList<>(rules);
+		
+		String roomName = room.getName();
+		//Store substring index of each rule to avoid recalculating roomName.indexOf()
+		int[] substringIndexArr = new int[MAX_NUMBER_OF_RULES];
+		for (int i = 0; i < tmpRules.size(); i++) {
+			int id = tmpRules.get(i).getId();
+			substringIndexArr[id] = roomName.indexOf(tmpRules.get(i).getInput());
+		}
 		int[] mark = new int[roomName.length()];
 	
-		Collections.sort(rules, new RuleComparator(roomName));
-		for (int index = 0; index < rules.size(); index++) {
-			if (isApplicable(roomName, rules.get(index), mark)) {
-				ruleIds.add(rules.get(index).getId());
+		Collections.sort(tmpRules, new RuleComparator(substringIndexArr));
+		
+		for (int i = 0; i < tmpRules.size(); i++) {
+			if (isApplicable(roomName, tmpRules.get(i), mark)) {
+				ruleIds.add(tmpRules.get(i).getId());
+				if (i+1 >= tmpRules.size() || !tmpRules.get(i).getInput().equals(tmpRules.get(i+1).getInput())) {
+					String s = tmpRules.get(i).getInput();
+					int start = roomName.indexOf(s);
+					int end = start + s.length();
+					for (int idx = start; idx < end; idx++) {
+						mark[i] = 1;
+					}
+				}
 			}
         }
+		Collections.sort(ruleIds);
 		res.setRuleIds(ruleIds);
 		return res;
 	}
@@ -73,30 +92,42 @@ public class TaggingServiceImp implements TaggingService{
 	 * @param mark: array that stores positions in String that can be applied or not (position that is used by another rule)
 	 * @return
 	 */
-	private static boolean isApplicable(String s, Rule rule, int[] mark) {
-		String substring = rule.getInput();
-		int posStart = s.indexOf(substring);
-		if (posStart < 0 || posStart + substring.length() > s.length()) return false;
-		for (int i = 0; i < substring.length(); i++) {
-			if (mark[posStart+i] == 1 || s.charAt(posStart+i) != substring.charAt(i)) return false;
+	
+	private static boolean isApplicable(String string, Rule rule, int[] mark) {
+		String sub = rule.getInput();
+		
+		int start = string.indexOf(sub);
+		int end = start + sub.length() - 1;
+		if (start < 0 || start + sub.length() > string.length()) return false;
+		
+		while (start >= 0) {
+			end = start + sub.length()-1;
+			if ((start == 0 || string.charAt(start-1) == ' ') && (end == string.length() - 1 || string.charAt(end+1) == ' ')) {
+				int i;
+				for (i = 0; i < sub.length(); i++) {
+					if (mark[start+i] == 1 || string.charAt(start+i) != sub.charAt(i)) break;
+				}
+				if (i == sub.length()) return true;
+			} else {
+				if (string.indexOf(sub, start+1) < 0) return false;
+			}
+			//find next appearance
+			start = string.indexOf(sub, start+1);
 		}
-		for (int i = posStart; i < posStart+substring.length(); i++) {
-			mark[i] = 1;
-		}
-		return true;
+		return false;
 	}
 	
 	private class RuleComparator implements Comparator<Rule>{
-		private String s;
-		RuleComparator(String s){
-			this.s = s;
+		private int[] substringIndexArr = new int[MAX_NUMBER_OF_RULES];
+		RuleComparator(int[] substringIndexArr){
+			this.substringIndexArr = substringIndexArr;
 		}	
 		@Override
 		public int compare(Rule r1, Rule r2) {
 			int res = ComparisonChain.start()
 			.compare(r2.getTarget(), r1.getTarget())
-			.compare(r2.getInput().length(), r1.getInput().length())
-			.compare(this.s.indexOf(r1.getInput()), this.s.indexOf(r2.getInput()))
+			.compare(r2.getRule_size(), r1.getRule_size())
+			.compare(this.substringIndexArr[r1.getId()], this.substringIndexArr[r2.getId()])
 			.result(); 
 			return res;
 		}
@@ -105,6 +136,5 @@ public class TaggingServiceImp implements TaggingService{
 
 }
 
-//시티뷰 슈페리어 더블 타임딜 시티뷰 파셜오션뷰 업그레이드
-//오션
-//오션뷰
+
+
