@@ -1,5 +1,7 @@
 package com.example.testtagging.entity;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -40,5 +42,13 @@ public class Room extends BaseRoom {
 
 	public void setOriginalName(String originalName) {
 		this.originalName = originalName;
+	}
+	
+	public List<Rule> getRules() {
+		return rules;
+	}
+
+	public void setId(List<Rule> rules) {
+		this.rules = rules;
 	}
 }

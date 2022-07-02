@@ -18,4 +18,8 @@ public class RoomRuleService {
 	public List<RoomRule> findAll() {
 		return this.roomRuleRepository.findAll();
 	}
+	
+	public List<Integer> findRuleByRoomId(int roomId){
+		return this.roomRuleRepository.findRuleByRoomId(roomId);
+	}
 }

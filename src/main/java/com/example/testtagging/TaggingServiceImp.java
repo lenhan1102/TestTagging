@@ -75,7 +75,7 @@ public class TaggingServiceImp implements TaggingService{
 					int start = roomName.indexOf(s);
 					int end = start + s.length();
 					for (int idx = start; idx < end; idx++) {
-						mark[i] = 1;
+						mark[idx] = 1;
 					}
 				}
 			}

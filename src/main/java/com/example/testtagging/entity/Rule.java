@@ -1,11 +1,17 @@
 package com.example.testtagging.entity;
 
+import java.util.List;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
+
+import lombok.EqualsAndHashCode;
+import lombok.ToString.Exclude;
 
 @Entity // This tells Hibernate to make a table out of this class
 @Table(name="rule")
@@ -32,11 +38,17 @@ public class Rule {
 
 	@Column(name="status")
 	private Integer status;
+	
+	// mappedBy trỏ tới tên biến persons ở trong Address.
+    @ManyToMany(mappedBy = "rules")
+    // LAZY để tránh việc truy xuất dữ liệu không cần thiết. Lúc nào cần thì mới query
+    @EqualsAndHashCode.Exclude
+    @Exclude
+    private List<Room> rooms;
 
 	public String getDimension() {
 		return this.dimension;
 	}
-
 	public void setDimension(String dimension) {
 		this.dimension = dimension;
 	}

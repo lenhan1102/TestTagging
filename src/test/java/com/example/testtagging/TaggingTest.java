@@ -63,16 +63,21 @@ class TaggingTest {
 			Room room = rooms.get(i);
 
 			params.setRoom(room);
-			List<Rule> tmpRules = allRules.stream()
-					.filter(rule -> rule.getTarget() == 0 || rule.getTarget() == room.getHotelId())
-					.collect(Collectors.toList());
+			
+//			List<Rule> tmpRules = allRules.stream()
+//					.filter(rule -> rule.getTarget() == 0 || rule.getTarget() == room.getHotelId())
+//					.collect(Collectors.toList());
+//			params.setRules(tmpRules);
+			List<Rule> tmpRules = ruleService.findByTarget(room.getHotelId());
 			params.setRules(tmpRules);
 			
-			List<Integer> expected = allRoomRule.stream()
-					.filter(roomrule -> roomrule.getRoom() == room.getId())
-					.map(roomrule -> {return roomrule.getRule();})
-					.collect(Collectors.toList());
-			params.setRes(expected);
+			
+//			List<Integer> expected = allRoomRule.stream()
+//					.filter(roomrule -> roomrule.getRoom() == room.getId())
+//					.map(roomrule -> {return roomrule.getRule();})
+//					.collect(Collectors.toList());
+//			params.setRes(expected);
+			params.setRes(roomRuleService.findRuleByRoomId(room.getId()));
 			
 			allParams.add(params);
 		}

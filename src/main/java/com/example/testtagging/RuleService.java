@@ -22,4 +22,8 @@ public class RuleService {
 	public List<Rule> findAll() {
 		return (List<Rule>)ruleRepository.findAll();
 	}
+
+	public List<Rule> findByTarget(int hotelId) {
+		return ruleRepository.findByTarget(hotelId);
+	}
 }
